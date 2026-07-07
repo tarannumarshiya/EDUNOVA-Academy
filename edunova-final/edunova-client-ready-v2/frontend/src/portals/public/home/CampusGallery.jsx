@@ -5,46 +5,28 @@ import { useFetch } from '../../../components/useFetch'
 import FadeIn from '../../../components/FadeIn'
 
 const fallbackImages = [
-  {
-    id: 'campus',
-    image: '/Campus.jpeg',
-    caption: 'EduNova Campus',
-  },
-  {
-    id: 'building',
-    image: '/building.jpeg',
-    caption: 'School Building',
-  },
-  {
-    id: 'exterior',
-    image: '/exterior.jpeg',
-    caption: 'Campus Exterior',
-  },
-  {
-    id: 'students',
-    image: '/student.jpeg',
-    caption: 'Students at EduNova',
-  },
-  {
-    id: 'edunova',
-    image: '/EduNova.jpeg',
-    caption: 'EduNova Global Academy',
-  },
-  {
-    id: 'campus-life',
-    image: '/Campus.jpeg',
-    caption: 'Campus Life',
-  },
-  {
-    id: 'learning',
-    image: '/student.jpeg',
-    caption: 'Digital Learning',
-  },
-  {
-    id: 'infrastructure',
-    image: '/building.jpeg',
-    caption: 'Modern Infrastructure',
-  },
+  { id: 'campus', image: '/Campus.jpeg', caption: 'EduNova Campus' },
+  { id: 'building', image: '/building.jpeg', caption: 'School Building' },
+  { id: 'exterior', image: '/exterior.jpeg', caption: 'Campus Exterior' },
+  { id: 'students', image: '/fstudent.jpeg', caption: 'Students at EduNova' },
+  { id: 'edunova', image: '/EduNova.jpeg', caption: 'EduNova Global Academy' },
+  { id: 'campus-life', image: '/Campus.jpeg', caption: 'Campus Life' },
+  { id: 'learning', image: '/fstudent.jpeg', caption: 'Digital Learning' },
+  { id: 'infrastructure', image: '/building.jpeg', caption: 'Modern Infrastructure' },
+]
+
+// Explicit bento layout for exactly 8 tiles on a 4-col grid (3 rows, 12 cells
+// total: one 2x2 + four 1x1 + one 2x1 + two 1x1 = 12 — no gaps, unlike the
+// previous index-based col-span/row-span which left holes at the bottom-right).
+const LAYOUT = [
+  'md:col-span-2 md:row-span-2 aspect-square md:aspect-auto', // 0 — big feature, top-left
+  'aspect-square',                                             // 1
+  'aspect-square',                                             // 2
+  'aspect-square',                                             // 3
+  'aspect-square',                                             // 4
+  'md:col-span-2 aspect-square md:aspect-[2/1]',                // 5 — wide banner, row 3
+  'aspect-square',                                             // 6
+  'aspect-square',                                             // 7
 ]
 
 export default function CampusGallery() {
@@ -88,31 +70,28 @@ export default function CampusGallery() {
         </div>
 
         {loading ? (
-          <p className="text-text-secondary">Loading gallery…</p>
-        ) : (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div
+                key={i}
+                className={`bg-gray-100 rounded-2xl animate-pulse ${LAYOUT[i]}`}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-4 md:grid-rows-3 gap-4">
             {imagesToShow.map((img, index) => (
-              <FadeIn key={img.id || index} delay={index * 40}>
-                <div
-                  className={`group relative overflow-hidden rounded-2xl shadow-md border border-gray-100 ${
-                    index === 0 || index === 5
-                      ? 'md:col-span-2 md:row-span-2'
-                      : ''
-                  }`}
-                >
+              <FadeIn key={img.id || index} delay={index * 40} className={LAYOUT[index]}>
+                <div className="group relative w-full h-full overflow-hidden rounded-2xl shadow-md border border-gray-100">
                   <img
                     src={img.image}
                     alt={img.caption || 'EduNova Campus Gallery'}
-                    className={`w-full object-cover group-hover:scale-110 transition-transform duration-500 ${
-                      index === 0 || index === 5
-                        ? 'h-[260px] md:h-[420px]'
-                        : 'h-[180px] md:h-[200px]'
-                    }`}
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                   />
 
-                  <div className="absolute inset-0 bg-gradient-to-t from-primary/75 via-primary/10 to-transparent opacity-80 group-hover:opacity-95 transition-opacity" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-primary/80 via-primary/10 to-transparent opacity-70 group-hover:opacity-90 transition-opacity" />
 
-                  <div className="absolute bottom-4 left-4 right-4">
+                  <div className="absolute bottom-0 left-0 right-0 p-4 translate-y-1 group-hover:translate-y-0 transition-transform duration-300">
                     <p className="font-subheading font-bold text-white text-sm md:text-base drop-shadow">
                       {img.caption || 'EduNova Campus'}
                     </p>

@@ -28,15 +28,25 @@ class Command(BaseCommand):
         for i, name in enumerate(programs):
             AcademicProgram.objects.update_or_create(name=name, defaults={"sort_order": i})
 
-        departments = [
-            "Academic Affairs", "Admissions", "Student Services", "Transport",
-            "Library", "Finance", "Accounts", "Human Resources",
-            "IT Department", "Examination Cell", "Sports", "Hostel",
-            "Medical Center", "Research", "Innovation Lab",
-        ]
-        for name in departments:
-            Department.objects.get_or_create(name=name)
-
+        DEPARTMENT_DESCRIPTIONS = {
+                "Academic Affairs": "Manages curriculum planning, academic standards, learning outcomes, and academic operations.",
+                "Admissions": "Handles admission enquiries, online registrations, application review, and student onboarding.",
+                "Student Services": "Supports student welfare, counselling, mentoring, documentation, and campus assistance.",
+                "Transport": "Manages school buses, routes, GPS tracking, drivers, pickup points, and student allocation.",
+                "Library": "Maintains physical books, digital library resources, e-books, issue/return, and reading support.",
+                "Finance": "Handles financial planning, fee structures, payments, reporting, and institutional budgeting.",
+                "Accounts": "Manages fee records, receipts, payroll coordination, invoices, and financial documentation.",
+                "Human Resources": "Handles recruitment, staff records, payroll support, leaves, employee onboarding, and policies.",
+                "IT Department": "Maintains digital campus systems, LMS, ERP, security, devices, and technical support.",
+                "Examination Cell": "Handles exam schedules, hall tickets, marks entry, results, report cards, and certificates.",
+                "Sports": "Promotes physical education, sports activities, tournaments, discipline, and team development.",
+                "Hostel": "Manages hostel facilities, rooms, wardens, student safety, occupancy, and residential support.",
+                "Medical Center": "Provides student health support, medical logs, wellness checks, and emergency care assistance.",
+                "Research": "Encourages academic research, innovation projects, student inquiry, and faculty development.",
+                "Innovation Lab": "Supports STEM learning, robotics, creative projects, technology experiments, and future skills.",
+            }
+        for name, description in DEPARTMENT_DESCRIPTIONS.items():
+                Department.objects.update_or_create(name=name, defaults={"description": description})
         stats = [
             ("Students", "6,500+"), ("Employees", "620+"), ("Teachers", "350+"),
             ("Smart Classrooms", "45+"), ("Science Labs", "18"),

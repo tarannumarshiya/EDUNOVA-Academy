@@ -56,7 +56,7 @@ export default function FacilitiesGrid() {
 
           {/* Right Image */}
           <FadeIn delay={100}>
-            <div className="relative">
+            <div className="relative overflow-hidden rounded-3xl">
               <div className="absolute -top-6 -left-6 w-36 h-36 bg-highlight/30 rounded-full blur-2xl" />
               <div className="absolute -bottom-6 -right-6 w-44 h-44 bg-secondary/20 rounded-full blur-2xl" />
 

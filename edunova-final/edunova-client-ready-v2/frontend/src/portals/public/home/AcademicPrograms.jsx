@@ -12,13 +12,13 @@ export default function AcademicPrograms() {
         <div className="grid lg:grid-cols-2 gap-12 items-center mb-12">
           {/* Left Image */}
           <FadeIn>
-            <div className="relative">
+            <div className="relative overflow-hidden rounded-3xl">
               <div className="absolute -top-6 -right-6 w-40 h-40 bg-highlight/30 rounded-full blur-2xl" />
               <div className="absolute -bottom-6 -left-6 w-44 h-44 bg-accent/20 rounded-full blur-2xl" />
 
               <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-white">
                 <img
-                  src="/student.jpeg"
+                  src="/images/Academic.png"
                   alt="EduNova students learning in classroom"
                   className="w-full h-[400px] object-cover"
                 />

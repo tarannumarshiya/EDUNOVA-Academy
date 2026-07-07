@@ -361,6 +361,11 @@ class SubjectView(SimpleTableView):
     columns = ("name", "subject_code", "type")
     order_by = "name"
 
+class TimetableView(SimpleTableView):
+    table = "portal_timetable"
+    columns = ("class_id", "subject_id", "teacher_id", "day_of_week", "start_time", "end_time")
+    order_by = "class_id, day_of_week, start_time"
+
 
 class VehicleView(SimpleTableView):
     table = "portal_vehicle"

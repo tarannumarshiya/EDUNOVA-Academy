@@ -90,6 +90,7 @@ urlpatterns = [
     path("admin-portal/users/<int:user_id>/reset-password/", admin_views.UserDetailView.as_view()),
     path("admin-portal/roles/", admin_views.RolesView.as_view()),
     path("admin-portal/classes/", admin_views.ClassView.as_view()),
+    path("admin-portal/timetable/", admin_views.TimetableView.as_view()),
     path("admin-portal/subjects/", admin_views.SubjectView.as_view()),
     path("admin-portal/vehicles/", admin_views.VehicleView.as_view()),
     path("admin-portal/routes/", admin_views.RouteView.as_view()),

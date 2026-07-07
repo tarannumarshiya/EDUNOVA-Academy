@@ -119,6 +119,15 @@ const ICON_MAP = {
   'Innovation Lab': Lightbulb,
 }
 
+// Keyed off the same known-department copy above, so if the API returns a
+// row with a blank description (e.g. seed data not yet backfilled, or a new
+// department added via Django admin without one filled in), each department
+// still gets its own distinct description instead of every blank one
+// collapsing to the same generic sentence.
+const DESCRIPTION_MAP = Object.fromEntries(
+  FALLBACK_DEPARTMENTS.map((d) => [d.name, d.description])
+)
+
 export default function Departments() {
   const { data: departments, loading } = useFetch(cmsApi.getDepartments, [])
 
@@ -129,6 +138,7 @@ export default function Departments() {
           icon: ICON_MAP[department.name] || Building2,
           description:
             department.description ||
+            DESCRIPTION_MAP[department.name] ||
             'Dedicated department supporting EduNova Global Academy operations and student success.',
         }))
       : FALLBACK_DEPARTMENTS
@@ -214,7 +224,7 @@ export default function Departments() {
         </FadeIn>
 
         <FadeIn delay={100}>
-          <div className="relative">
+          <div className="relative overflow-hidden rounded-3xl">
             <div className="absolute -top-6 -left-6 w-36 h-36 bg-highlight/30 rounded-full blur-2xl" />
             <div className="absolute -bottom-6 -right-6 w-44 h-44 bg-secondary/20 rounded-full blur-2xl" />
 
@@ -296,7 +306,7 @@ export default function Departments() {
         <FadeIn>
           <div className="relative rounded-3xl overflow-hidden shadow-2xl">
             <img
-              src="/student.jpeg"
+              src="/fstudent.jpeg"
               alt="EduNova student services"
               className="w-full h-[420px] object-cover"
             />

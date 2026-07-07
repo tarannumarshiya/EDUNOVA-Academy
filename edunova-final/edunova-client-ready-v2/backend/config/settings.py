@@ -130,11 +130,9 @@ REST_FRAMEWORK = {
     # much more generous per-IP backstop (catches one IP spraying attempts
     # across many different accounts, without punishing a whole school
     # sharing one campus WiFi/NAT egress IP the way a single shared-IP limit
-    # would). These use Django's cache framework — the default LocMemCache
-    # below works for a single-process dev server, but is PER-PROCESS: behind
-    # Gunicorn with multiple workers, each worker has its own counter, so the
-    # real effective limit is (rate x worker count). For production, point
-    # CACHES at Redis so limits are enforced consistently across all workers.
+    # would). These use Django's cache framework — see CACHES below, which
+    # now points at Redis so limits are enforced consistently across all
+    # Gunicorn workers instead of each worker keeping its own counter.
     "DEFAULT_THROTTLE_RATES": {
         "otp_login_account": "5/min",
         "otp_verify_account": "5/min",
@@ -144,6 +142,23 @@ REST_FRAMEWORK = {
         "otp_resend_ip": "20/min",
     },
 }
+
+# ---------------------------------------------------------------------------
+# Cache — Redis-backed so OTP storage (see portal/auth_views.py::_store_otp)
+# and the throttle rates above are consistent across every Gunicorn worker.
+# REDIS_URL comes from the environment: locally it's the docker-compose
+# "redis" service (redis://redis:6379/0); in production it's whatever your
+# managed Redis provider (Upstash / Redis Cloud / ElastiCache) gives you.
+# ---------------------------------------------------------------------------
+# CACHES = {
+#     "default": {
+#         "BACKEND": "django_redis.cache.RedisCache",
+#         "LOCATION": config("REDIS_URL", default="redis://127.0.0.1:6379/0"),
+#         "OPTIONS": {
+#             "CLIENT_CLASS": "django_redis.client.DefaultClient",
+#         },
+#     }
+# }
 
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(hours=6),

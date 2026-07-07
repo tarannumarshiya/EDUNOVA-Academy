@@ -63,11 +63,13 @@ def _collect_route_results():
             test_url = "/" + route
         try:
             resp = client.get(test_url, SERVER_NAME="localhost")
-            ok = resp.status_code < 400 or resp.status_code in (401, 403, 404)
+            ok = resp.status_code < 400 or resp.status_code in (401, 403, 404, 405)
             if resp.status_code == 401:
                 note = "requires auth"
             elif resp.status_code == 403:
                 note = "forbidden (auth required)"
+            elif resp.status_code == 405:
+                note = "method not allowed (GET) — endpoint is write-only, working as intended"
             elif resp.status_code == 404 and is_dynamic:
                 note = "dynamic — placeholder ID not found (route OK)"
             else:
