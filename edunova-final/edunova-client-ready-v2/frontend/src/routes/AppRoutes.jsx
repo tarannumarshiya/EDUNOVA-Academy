@@ -68,12 +68,15 @@ export default function AppRoutes() {
         <Route path="/terms" element={<Terms />} />
         <Route path="/login" element={<LoginRolePicker />} />
         <Route path="/page/:slug" element={<CMSPageView />} />
+        <Route path="/login" element={<LoginRolePicker />} />
+<Route path="/admin/login" element={<LoginRolePicker />} />
       </Route>
 
       <Route path="/student/*" element={<StudentRoutes />} />
       <Route path="/teacher/*" element={<TeacherRoutes />} />
       <Route path="/parent/*" element={<ParentRoutes />} />
       <Route path="/admin/*" element={<AdminRoutes />} />
+      
 
       <Route path="*" element={<NotFound />} />
     </Routes>
