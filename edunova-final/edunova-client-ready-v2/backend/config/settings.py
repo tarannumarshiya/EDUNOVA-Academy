@@ -16,7 +16,15 @@ SECRET_KEY = config("DJANGO_SECRET_KEY", default="dev-secret-key-change-in-produ
 # in your local .env for development. Never set DEBUG=True on any host reachable
 # from the internet (see DEV_STATIC_OTP below for the related OTP risk).
 DEBUG = config("DEBUG", default=False, cast=bool)
-ALLOWED_HOSTS = config("ALLOWED_HOSTS", default="localhost,127.0.0.1").split(",")
+ALLOWED_HOSTS = [
+    "localhost",
+    "127.0.0.1",
+    ".onrender.com",
+]
+
+RENDER_EXTERNAL_HOSTNAME = os.environ.get("RENDER_EXTERNAL_HOSTNAME")
+if RENDER_EXTERNAL_HOSTNAME:
+    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
 
 # SECURITY: separate, explicit opt-in — never tied to DEBUG. A rushed deploy
 # with DEBUG=True left on would otherwise make every account reachable via a
