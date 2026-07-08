@@ -3,6 +3,8 @@ EduNova Global Academy — Integrated Backend
 Public website CMS/admissions + Student Portal + Teacher Portal.
 Database target: Supabase PostgreSQL using DATABASE_URL.
 """
+
+import os
 from datetime import timedelta
 from pathlib import Path
 
@@ -12,24 +14,22 @@ from decouple import config
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = config("DJANGO_SECRET_KEY", default="dev-secret-key-change-in-production")
-# SAFE-BY-DEFAULT: DEBUG defaults to False. You must explicitly opt into DEBUG=True
-# in your local .env for development. Never set DEBUG=True on any host reachable
-# from the internet (see DEV_STATIC_OTP below for the related OTP risk).
+
 DEBUG = config("DEBUG", default=False, cast=bool)
+
 ALLOWED_HOSTS = [
-    "localhost",
-    "127.0.0.1",
-    ".onrender.com",
+    host.strip()
+    for host in config(
+        "ALLOWED_HOSTS",
+        default="localhost,127.0.0.1,.onrender.com",
+    ).split(",")
+    if host.strip()
 ]
 
 RENDER_EXTERNAL_HOSTNAME = os.environ.get("RENDER_EXTERNAL_HOSTNAME")
-if RENDER_EXTERNAL_HOSTNAME:
+if RENDER_EXTERNAL_HOSTNAME and RENDER_EXTERNAL_HOSTNAME not in ALLOWED_HOSTS:
     ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
 
-# SECURITY: separate, explicit opt-in — never tied to DEBUG. A rushed deploy
-# with DEBUG=True left on would otherwise make every account reachable via a
-# publicly-known static OTP ("123456"). Defaults to False; keep it False
-# everywhere except your own local machine.
 DEV_STATIC_OTP = config("DEV_STATIC_OTP", default=False, cast=bool)
 
 INSTALLED_APPS = [
@@ -39,17 +39,19 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "rest_framework",
+
     "corsheaders",
+    "rest_framework",
     "django_filters",
+
     "apps.cms",
     "apps.admissions",
     "portal",
 ]
 
 MIDDLEWARE = [
-    "django.middleware.security.SecurityMiddleware",
     "corsheaders.middleware.CorsMiddleware",
+    "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -79,6 +81,7 @@ TEMPLATES = [
 WSGI_APPLICATION = "config.wsgi.application"
 
 DATABASE_URL = config("DATABASE_URL", default="")
+
 if DATABASE_URL:
     DATABASES = {
         "default": dj_database_url.parse(
@@ -99,14 +102,20 @@ else:
         }
     }
 
-# Uses Django's default auth_user table. This matches the Supabase schema shared in this chat.
-# Portal roles are stored in portal_user_profile and Django groups.
-
 AUTH_PASSWORD_VALIDATORS = [
-    {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
-    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator", "OPTIONS": {"min_length": 8}},
-    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
-    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
+    {
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"
+    },
+    {
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
+        "OPTIONS": {"min_length": 8},
+    },
+    {
+        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"
+    },
+    {
+        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"
+    },
 ]
 
 LANGUAGE_CODE = "en-us"
@@ -114,7 +123,9 @@ TIME_ZONE = "Asia/Kolkata"
 USE_I18N = True
 USE_TZ = True
 
-STATIC_URL = "static/"
+STATIC_URL = "/static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
+
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
@@ -132,15 +143,6 @@ REST_FRAMEWORK = {
     ),
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 20,
-    # Brute-force protection on the OTP login flow. Two layers per endpoint:
-    # a tight per-account limit (the real defense — caps attempts against one
-    # account regardless of how many IPs an attacker spreads across) and a
-    # much more generous per-IP backstop (catches one IP spraying attempts
-    # across many different accounts, without punishing a whole school
-    # sharing one campus WiFi/NAT egress IP the way a single shared-IP limit
-    # would). These use Django's cache framework — see CACHES below, which
-    # now points at Redis so limits are enforced consistently across all
-    # Gunicorn workers instead of each worker keeping its own counter.
     "DEFAULT_THROTTLE_RATES": {
         "otp_login_account": "5/min",
         "otp_verify_account": "5/min",
@@ -151,23 +153,6 @@ REST_FRAMEWORK = {
     },
 }
 
-# ---------------------------------------------------------------------------
-# Cache — Redis-backed so OTP storage (see portal/auth_views.py::_store_otp)
-# and the throttle rates above are consistent across every Gunicorn worker.
-# REDIS_URL comes from the environment: locally it's the docker-compose
-# "redis" service (redis://redis:6379/0); in production it's whatever your
-# managed Redis provider (Upstash / Redis Cloud / ElastiCache) gives you.
-# ---------------------------------------------------------------------------
-# CACHES = {
-#     "default": {
-#         "BACKEND": "django_redis.cache.RedisCache",
-#         "LOCATION": config("REDIS_URL", default="redis://127.0.0.1:6379/0"),
-#         "OPTIONS": {
-#             "CLIENT_CLASS": "django_redis.client.DefaultClient",
-#         },
-#     }
-# }
-
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(hours=6),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
@@ -176,38 +161,56 @@ SIMPLE_JWT = {
     "USER_ID_CLAIM": "user_id",
 }
 
-CORS_ALLOW_ALL_ORIGINS = DEBUG  # allows any localhost port in dev; False in production (DEBUG=False)
-CORS_ALLOWED_ORIGINS = [] if DEBUG else config(
-    "CORS_ALLOWED_ORIGINS",
-    default="http://localhost:5173,http://127.0.0.1:5173",
-).split(",")
+CORS_ALLOW_ALL_ORIGINS = False
+
+CORS_ALLOWED_ORIGINS = [
+    origin.strip().rstrip("/")
+    for origin in config(
+        "CORS_ALLOWED_ORIGINS",
+        default="http://localhost:5173,http://127.0.0.1:5173",
+    ).split(",")
+    if origin.strip()
+]
+
+CSRF_TRUSTED_ORIGINS = [
+    origin.strip().rstrip("/")
+    for origin in config(
+        "CSRF_TRUSTED_ORIGINS",
+        default="",
+    ).split(",")
+    if origin.strip()
+]
+
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r"^https://edunova-academy-cvw8.*\.vercel\.app$",
+]
+
 CORS_ALLOW_CREDENTIALS = True
 
-# Supabase Storage/API — server-side only. Never place service role keys in frontend.
 SUPABASE_URL = config("SUPABASE_URL", default="")
 SUPABASE_SERVICE_ROLE_KEY = config("SUPABASE_SERVICE_ROLE_KEY", default="")
+
 SUPABASE_BUCKET_LMS = "lms-resources"
 SUPABASE_BUCKET_SUBMISSIONS = "assignmentsubmissions"
 SUPABASE_BUCKET_CERTS = "officialdocuments"
 SUPABASE_BUCKET_AVATARS = "studentavatars"
 SUPABASE_BUCKET_BACKUPS = "database-backups"
 
-# Symmetric key (Fernet, 32 url-safe base64 bytes) used to encrypt the local
-# JSON backup file before it's written to disk / uploaded to Supabase
-# Storage. Generate one with:
-#   python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
-# There is deliberately no default — an empty/missing key means
-# backup_database will refuse to run rather than silently write an
-# unencrypted dump of every student's fee, medical, and contact data.
 BACKUP_ENCRYPTION_KEY = config("BACKUP_ENCRYPTION_KEY", default="")
 
-EMAIL_BACKEND = config("EMAIL_BACKEND", default="django.core.mail.backends.console.EmailBackend")
+EMAIL_BACKEND = config(
+    "EMAIL_BACKEND",
+    default="django.core.mail.backends.console.EmailBackend",
+)
 EMAIL_HOST = config("EMAIL_HOST", default="")
 EMAIL_PORT = config("EMAIL_PORT", default=587, cast=int)
 EMAIL_USE_TLS = config("EMAIL_USE_TLS", default=True, cast=bool)
 EMAIL_HOST_USER = config("EMAIL_HOST_USER", default="")
 EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD", default="")
-DEFAULT_FROM_EMAIL = config("DEFAULT_FROM_EMAIL", default="no-reply@edunovaacademy.edu.in")
+DEFAULT_FROM_EMAIL = config(
+    "DEFAULT_FROM_EMAIL",
+    default="no-reply@edunovaacademy.edu.in",
+)
 
 OTP_EXPIRY_SECONDS = 300
 OTP_LENGTH = 6
